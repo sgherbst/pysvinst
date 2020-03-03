@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 import subprocess
+import shutil
 
 from pathlib import Path
 
@@ -20,7 +21,10 @@ class SvInstBuild(build_ext):
         extdir.mkdir(parents=True, exist_ok=True)
 
         # install the binary to the python package directory
-        subprocess.run(['cargo', 'install', 'svinst', '--root', str(extdir)])
+        if shutil.which('cargo') is not None:
+            subprocess.run(['cargo', 'install', 'svinst', '--root', str(extdir)])
+        else:
+            raise Exception('Rust is needed to build this package.  Please install it from https://www.rust-lang.org/tools/install')
 
 with open('README.md', 'r') as fh:
     LONG_DESCRIPTION = fh.read()
