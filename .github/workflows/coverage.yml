@@ -1,0 +1,37 @@
+name: Python package
+
+on: [push]
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.7]
+        rust-version: [stable]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up Rust $ {{ rust-version }}
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust-version }}
+    - name: Install package
+      run: |
+        pip install -e .
+    - name: Test with pytest while generating coverage information
+      run: |
+        pip install pytest pytest-cov
+        pytest --cov-report=xml --cov=svinst tests -v -r s
+    - name: Upload coverage
+      uses: codecov/codecov-action@v1.0.3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
