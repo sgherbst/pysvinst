@@ -24,6 +24,9 @@ jobs:
       uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
     - name: Install package
       run: |
         pip install -e .
