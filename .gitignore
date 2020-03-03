@@ -1,5 +1,8 @@
 # User-added ignores
 .idea/
+svinst/.crates.toml
+svinst/.crates2.json
+svinst/bin
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
