@@ -1,0 +1,35 @@
+name: Periodic
+
+on:
+  schedule:
+  - cron: 0 11 * * ?
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.7]
+        rust-version: [stable]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up Rust $ {{ rust-version }}
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust-version }}
+    - name: Install package
+      run: |
+        pip install -e .
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        pytest tests -v -r s
