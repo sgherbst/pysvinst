@@ -23,7 +23,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Set up Rust ${{ rust-version }}
+    - name: Set up Rust ${{ matrix.rust-version }}
       uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust-version }}
