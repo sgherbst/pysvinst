@@ -39,4 +39,12 @@ jobs:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        twine upload dist/*.whl -u $TWINE_USERNAME -p $TWINE_PASSWORD
+        echo [distutils]                                  > ~/.pypirc
+        echo index-servers =                             >> ~/.pypirc
+        echo "  pypi"                                    >> ~/.pypirc
+        echo                                             >> ~/.pypirc
+        echo [pypi]                                      >> ~/.pypirc
+        echo repository=https://upload.pypi.org/legacy/  >> ~/.pypirc
+        echo username=$TWINE_USERNAME                    >> ~/.pypirc
+        echo password=$TWINE_PASSWORD                    >> ~/.pypirc
+        twine upload dist/*.whl
