@@ -4,7 +4,7 @@
 [![Actions Status](https://github.com/sgherbst/pysvinst/workflows/Regression/badge.svg)](https://github.com/sgherbst/pysvinst/actions)
 [![codecov](https://codecov.io/gh/sgherbst/pysvinst/branch/master/graph/badge.svg)](https://codecov.io/gh/sgherbst/pysvinst)
 
-This Python library examines SystemVerilog files to determine what modules are defined and what modules are instantiated.  The backend uses [sv-parser](https://github.com/dalance/sv-parser), which is one of the most comprehensive open-source parsers of SystemVerilog 2017.
+This Python library examines SystemVerilog files to determine what modules are defined and what modules are instantiated.  The backend uses [sv-parser](https://github.com/dalance/sv-parser), which has good support of SystemVerilog 2017.
 
 ## Purpose
 
@@ -17,7 +17,7 @@ This package can be installed via pip:
 > pip install svinst
 ```
 
-Alternatively, you can clone the repository and build the package your self.  This requires that [Rust](https://www.rust-lang.org/tools/install) is installed.
+Alternatively, you can clone the repository and build the package yourself.  This requires that [Rust](https://www.rust-lang.org/tools/install) is installed.
 ```shell
 > git clone https://github.com/sgherbst/pysvinst.git
 > cd pysvinst

@@ -37,7 +37,7 @@ def call_svinst(files, includes=None, defines=None, ignore_include=False, full_t
     args = [str(elem) for elem in args]
 
     # call command
-    result = subprocess.run(args, capture_output=True, universal_newlines=True)
+    result = subprocess.run(args, capture_output=True, encoding='utf-8')
     if result.returncode != 0:
         print(f'{result.stderr}', file=sys.stderr)
         raise Exception(f'svinst returned code {result.returncode}.')
