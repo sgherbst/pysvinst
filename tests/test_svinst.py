@@ -1,12 +1,13 @@
 import pytest
 from pathlib import Path
 from svinst import *
-from svinst.modchk import ModDef, ModInst, SyntaxNode, SyntaxToken
+from svinst.defchk import (ModDef, ModInst, SyntaxNode, SyntaxToken,
+                           PkgDef, PkgInst, IntfDef)
 
 VLOG_DIR = Path(__file__).resolve().parent / 'verilog'
 
 def test_test():
-    result = get_mod_defs(VLOG_DIR / 'test.sv')
+    result = get_defs(VLOG_DIR / 'test.sv')
     expct = [
       ModDef("A", [
       ]),
@@ -25,10 +26,10 @@ def test_test():
 
 def test_broken():
     with pytest.raises(Exception):
-        get_mod_defs(VLOG_DIR / 'broken.sv')
+        get_defs(VLOG_DIR / 'broken.sv')
 
 def test_inc():
-    result = get_mod_defs(VLOG_DIR / 'inc_test.sv', includes=[VLOG_DIR])
+    result = get_defs(VLOG_DIR / 'inc_test.sv', includes=[VLOG_DIR])
     expct = [
       ModDef("inc_top", [
           ModInst("mod_name_from_inc_sv", "I0")
@@ -38,7 +39,7 @@ def test_inc():
 
 def test_def():
     defines = {'MODULE_NAME': 'module_name_from_define', 'EXTRA_INSTANCE': None}
-    result = get_mod_defs(VLOG_DIR / 'def_test.sv', defines=defines)
+    result = get_defs(VLOG_DIR / 'def_test.sv', defines=defines)
     expct = [
       ModDef("def_top", [
         ModInst("module_name_from_define", "I0"),
@@ -78,5 +79,38 @@ def test_simple():
           ])
         ])
       ])
+    ]
+    assert result == expct
+
+def test_pkg():
+    result = get_defs(VLOG_DIR / 'pkg.sv')
+    expct = [
+        PkgDef("i"),
+        ModDef("A", [
+            PkgInst("b")
+        ]),
+        PkgDef("j"),
+        ModDef("B", [
+            PkgInst("c")
+        ]),
+        ModDef("E", [
+            PkgInst("f"),
+            PkgInst("g")
+        ]),
+        PkgDef("k")
+    ]
+    assert result == expct
+
+def test_intf():
+    result = get_defs(VLOG_DIR / 'intf.sv')
+    expct = [
+        IntfDef("b"),
+        ModDef("A", [
+        ]),
+        IntfDef("c"),
+        ModDef("E", [
+          ModInst("c", "c_i"),
+        ]),
+        IntfDef("d")
     ]
     assert result == expct

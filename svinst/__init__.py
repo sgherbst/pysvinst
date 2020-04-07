@@ -1,1 +1,1 @@
-from .modchk import get_mod_defs, get_syntax_tree
+from .defchk import get_defs, get_syntax_tree

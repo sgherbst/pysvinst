@@ -82,26 +82,68 @@ class ModInst:
                 (self.mod_name == other.mod_name) and
                 (self.inst_name == other.inst_name))
 
-def process_mod_defs(result):
+class PkgDef:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return f'{self.__class__.__name__}("{self.name}")'
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and (self.name == other.name)
+
+class PkgInst:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return f'{self.__class__.__name__}("{self.name}")'
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and (self.name == other.name)
+
+class IntfDef:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return f'{self.__class__.__name__}("{self.name}")'
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and (self.name == other.name)
+
+def process_defs(result):
     retval = []
+
     for def_ in result:
-        name = def_['mod_name']
-        insts = def_['mod_insts'] if def_['mod_insts'] is not None else []
-        retval.append(
-            ModDef(
-                name,
-                [ModInst(inst['mod_name'], inst['inst_name']) for inst in insts]
-            )
-        )
+        if 'pkg_name' in def_:
+            retval.append(PkgDef(name=def_['pkg_name']))
+        elif 'intf_name' in def_:
+            retval.append(IntfDef(name=def_['intf_name']))
+        elif 'mod_name' in def_:
+            name = def_['mod_name']
+            insts = []
+            if 'insts' in def_ and def_['insts'] is not None:
+                for inst in def_['insts']:
+                    if 'mod_name' in inst:
+                        insts.append(ModInst(inst['mod_name'], inst['inst_name']))
+                    elif 'pkg_name' in inst:
+                        insts.append(PkgInst(inst['pkg_name']))
+                    else:
+                        raise Exception(f'Unknown instance: {inst}')
+            retval.append(ModDef(name, insts))
+        else:
+            raise Exception(f'Unknown definition: {def_}')
+
     return retval
 
-def get_mod_defs(files, includes=None, defines=None, ignore_include=False):
+def get_defs(files, includes=None, defines=None, ignore_include=False):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
                       ignore_include=ignore_include, full_tree=False)
 
-    retval = [process_mod_defs(elem['mod_defs']) for elem in out['files']]
+    retval = [process_defs(elem['defs']) for elem in out['files']]
 
     if single:
         retval = retval[0]

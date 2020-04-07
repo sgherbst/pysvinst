@@ -27,11 +27,11 @@ Alternatively, you can clone the repository and build the package yourself.  Thi
 
 ## Usage
 
-The main functionality of this package is provided through the function ``get_mod_defs``.  In this first example, a list of module definitions is returned, each one containing a list module instantiations (if any) contained in that module definition.  
+The main functionality of this package is provided through the function ``get_defs``.  In this first example, a list of module definitions is returned, each one containing a list module instantiations (if any) contained in that module definition.  
 
 ```python
->>> from svinst import get_mod_defs
->>> defs = get_mod_defs('tests/verilog/test.sv')
+>>> from svinst import get_defs
+>>> defs = get_defs('tests/verilog/test.sv')
 >>> _ = [print(str(def_)) for def_ in defs]
 ModDef("A", [
 ])
@@ -50,15 +50,15 @@ ModDef("D", [
 It is also possible to add define variables and include directory paths, since both of these can change the modules that get defined and instantiated:
 
 ```python
->>> get_mod_defs('tests/verilog/inc_test.sv', includes=['tests/verilog'])
->>> get_mod_defs('tests/verilog/def_test.sv',
-                 defines={'MODULE_NAME': 'module_name_from_define', 'EXTRA_INSTANCE': None})
+>>> get_defs('tests/verilog/inc_test.sv', includes=['tests/verilog'])
+>>> get_defs('tests/verilog/def_test.sv',
+             defines={'MODULE_NAME': 'module_name_from_define', 'EXTRA_INSTANCE': None})
 ```
 
 If there is a syntax error, an error message is printed and an Exception is raised.
 
 ```python
->>> get_mod_defs('tests/verilog/broken.sv')
+>>> get_defs('tests/verilog/broken.sv')
 parse failed: "tests/verilog/broken.sv"
  tests/verilog/broken.sv:5:10
   |
