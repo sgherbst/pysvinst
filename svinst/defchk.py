@@ -45,7 +45,7 @@ def call_svinst(files, includes=None, defines=None, ignore_include=False, full_t
     # parse output as YAML
     return yaml.safe_load(result.stdout)
 
-class ModDef:
+class Def:
     def __init__(self, name, insts=None):
         # set defaults
         if insts is None:
@@ -69,71 +69,63 @@ class ModDef:
                 (len(self.insts) == len(other.insts)) and
                 all(self_inst == other_inst for self_inst, other_inst in zip(self.insts, other.insts)))
 
-class ModInst:
-    def __init__(self, mod_name, inst_name):
-        self.mod_name = mod_name
-        self.inst_name = inst_name
+class ModDef(Def):
+    pass
+
+class PkgDef(Def):
+    pass
+
+class IntfDef(Def):
+    pass
+
+class Inst:
+    def __init__(self, name):
+        self.name = name
 
     def __str__(self):
-        return f'{self.__class__.__name__}("{self.mod_name}", "{self.inst_name}")'
+        return f'{self.__class__.__name__}("{self.name}")'
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
-                (self.mod_name == other.mod_name) and
-                (self.inst_name == other.inst_name))
+                (self.name == other.name))
 
-class PkgDef:
-    def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return f'{self.__class__.__name__}("{self.name}")'
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.name == other.name)
-
-class PkgInst:
-    def __init__(self, name):
-        self.name = name
+class ModInst(Inst):
+    def __init__(self, name, inst_name):
+        super().__init__(name=name)
+        self.inst_name = inst_name
 
     def __str__(self):
-        return f'{self.__class__.__name__}("{self.name}")'
+        return f'{self.__class__.__name__}("{self.name}", "{self.inst_name}")'
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.name == other.name)
+        return super().__eq__(other) and (self.inst_name == other.inst_name)
 
-class IntfDef:
-    def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return f'{self.__class__.__name__}("{self.name}")'
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.name == other.name)
+class PkgInst(Inst):
+    pass
 
 def process_defs(result):
     retval = []
 
-    for def_ in result:
-        if 'pkg_name' in def_:
-            retval.append(PkgDef(name=def_['pkg_name']))
-        elif 'intf_name' in def_:
-            retval.append(IntfDef(name=def_['intf_name']))
-        elif 'mod_name' in def_:
-            name = def_['mod_name']
-            insts = []
-            if 'insts' in def_ and def_['insts'] is not None:
-                for inst in def_['insts']:
-                    if 'mod_name' in inst:
-                        insts.append(ModInst(inst['mod_name'], inst['inst_name']))
-                    elif 'pkg_name' in inst:
-                        insts.append(PkgInst(inst['pkg_name']))
-                    else:
-                        raise Exception(f'Unknown instance: {inst}')
-            retval.append(ModDef(name, insts))
+    for entry in result:
+        if 'pkg_name' in entry:
+            def_ = PkgDef(name=entry['pkg_name'])
+        elif 'intf_name' in entry:
+            def_ = IntfDef(name=entry['intf_name'])
+        elif 'mod_name' in entry:
+            def_ = ModDef(name=entry['mod_name'])
         else:
-            raise Exception(f'Unknown definition: {def_}')
+            raise Exception(f'Unknown definition: {entry}')
+
+        if entry.get('insts', None) is not None:
+            for inst in entry['insts']:
+                if 'mod_name' in inst:
+                    def_.insts.append(ModInst(inst['mod_name'], inst['inst_name']))
+                elif 'pkg_name' in inst:
+                    def_.insts.append(PkgInst(inst['pkg_name']))
+                else:
+                    raise Exception(f'Unknown instance: {inst}')
+
+        retval.append(def_)
 
     return retval
 
