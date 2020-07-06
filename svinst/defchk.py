@@ -7,7 +7,7 @@ import sys
 def is_single_file(files):
     return isinstance(files, (str, Path))
 
-def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False):
+def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False, separate=False):
     # set defaults
     if includes is None:
         includes = []
@@ -32,6 +32,8 @@ def call_svinst(files, includes=None, defines=None, ignore_include=False, full_t
         args += ['--ignore-include']
     if full_tree:
         args += ['--full-tree']
+    if separate:
+        args += ['--separate']
 
     # convert arguments to strings
     args = [str(elem) for elem in args]
@@ -106,6 +108,9 @@ class PkgInst(Inst):
 def process_defs(result):
     retval = []
 
+    if result is None:
+        result = []
+
     for entry in result:
         if 'pkg_name' in entry:
             def_ = PkgDef(name=entry['pkg_name'])
@@ -129,11 +134,11 @@ def process_defs(result):
 
     return retval
 
-def get_defs(files, includes=None, defines=None, ignore_include=False):
+def get_defs(files, includes=None, defines=None, ignore_include=False, separate=False):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
-                      ignore_include=ignore_include, full_tree=False)
+                      ignore_include=ignore_include, separate=separate, full_tree=False)
 
     retval = [process_defs(elem['defs']) for elem in out['files']]
 
@@ -209,11 +214,11 @@ def process_syntax_tree(result):
             )
     return retval
 
-def get_syntax_tree(files, includes=None, defines=None, ignore_include=False):
+def get_syntax_tree(files, includes=None, defines=None, ignore_include=False, separate=False):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
-                      ignore_include=ignore_include, full_tree=True)
+                      ignore_include=ignore_include, separate=separate, full_tree=True)
 
     retval = [process_syntax_tree(elem['syntax_tree']) for elem in out['files']]
 

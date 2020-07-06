@@ -114,3 +114,23 @@ def test_intf():
         IntfDef("d")
     ]
     assert result == expct
+
+def test_empty():
+    result = get_defs(VLOG_DIR / 'empty.sv')
+    expct = []
+    assert result == expct
+
+def test_multi():
+    result = get_defs([
+        VLOG_DIR / 'multi' / 'define1.v',
+        VLOG_DIR / 'multi' / 'test1.sv',
+        VLOG_DIR / 'multi' / 'define2.v',
+        VLOG_DIR / 'multi' / 'dut.v'
+    ])
+    expct = [
+        [],
+        [ModDef("test", [ModInst("dut", "u0")])],
+        [],
+        [ModDef("dut")]
+    ]
+    assert result == expct
