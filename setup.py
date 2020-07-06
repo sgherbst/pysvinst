@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.3'
+version = '0.1.5'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
