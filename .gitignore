@@ -4,6 +4,7 @@ svinst/.crates.toml
 svinst/.crates2.json
 svinst/bin
 wheelhouse/
+slang/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

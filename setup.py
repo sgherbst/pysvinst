@@ -1,32 +1,87 @@
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
+import os
 import subprocess
 import shutil
 
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.6'
+version = '0.1.7.dev1'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
 '''
 
-class SvInstBuild(build_ext):
+class BinaryBuild(build_ext):
     def run(self):
-        # get path to the directory where binaries should be installed
+        self.build_svinst_binary()
+        self.build_slang_binary()
+
+    @property
+    def extdir(self):
         ext = self.extensions[0]
-        extdir = Path(self.get_ext_fullpath(ext.name)).resolve().parent
-        extdir = extdir / 'svinst'
-        extdir.mkdir(parents=True, exist_ok=True)
+        retval = Path(self.get_ext_fullpath(ext.name)).resolve().parent
+        retval = retval / 'svinst'
+        return retval
+
+    def build_svinst_binary(self):
+        # get path to the directory where binaries should be installed
+        self.extdir.mkdir(parents=True, exist_ok=True)
 
         # install the binary to the python package directory
         if shutil.which('cargo') is not None:
-            subprocess.run(['cargo', 'install', 'svinst', '--root', str(extdir)])
+            subprocess.run(['cargo', 'install', 'svinst', '--root', str(self.extdir)])
         else:
-            raise Exception('Rust is needed to build this package.  Please install it from https://www.rust-lang.org/tools/install')
+            raise Exception(
+                'Rust is needed to build this package.  '
+                'Please install it from https://www.rust-lang.org/tools/install'
+            )
 
-        # 
+    def build_slang_binary(self):
+        # checkout slang
+        if shutil.which('git') is None:
+            raise Exception('git is needed to check out the slang source code.')
+        subprocess.run([
+            'git', 'clone',
+            '-b', 'v0.4',
+            '--single-branch',
+            '--depth', '1',
+            'https://github.com/MikePopoloski/slang.git'
+        ])
+
+        # go to the build directory
+        cwd = Path(os.getcwd()).resolve()
+        build = cwd / 'slang' / 'build'
+        build.mkdir(parents=True, exist_ok=True)
+        os.chdir(str(build))
+
+        # run cmake
+        if shutil.which('cmake') is None:
+            raise Exception('git is needed to build the slang binary.')
+        subprocess.run([
+            'cmake',
+            '-DSTATIC_BUILD=ON',
+            '-DCMAKE_CXX_COMPILER=g++-9',
+            '-DCMAKE_BUILD_TYPE=Release',
+            '..'
+        ])
+
+        # run make
+        if shutil.which('make') is None:
+            raise Exception('git is needed to build the slang binary.')
+        subprocess.run([
+            'make', '-j8'
+        ])
+
+        # go back to the starting directory
+        os.chdir(str(cwd))
+
+        # copy the binary to the install location
+        (self.extdir / 'bin').mkdir(parents=True, exist_ok=True)
+        shutil.copy(str(build / 'bin' / 'slang'),
+                    str(self.extdir / 'bin' / 'slang-svinst'))
+
 
 with open('README.md', 'r') as fh:
     LONG_DESCRIPTION = fh.read()
@@ -55,16 +110,20 @@ setup(
     ],
     include_package_data=True,
     zip_safe=False,
-    # create command-line script to run svinst binary
+    # create command-line script to run svinst and slang binaries
     entry_points={
         'console_scripts': [
-            'svinst=svinst.svinst:main'
+            'svinst=svinst.svinst:main',
+            'slang-svinst=svinst.slang_svinst:main'
         ]
     },
     install_requires=[
         'PyYAML'
     ],
     # configure building of svinst binary
-    ext_modules=[Extension('svinst', [])],
-    cmdclass=dict(build_ext=SvInstBuild)
+    ext_modules=[
+        Extension('svinst', []),
+        Extension('slang-svinst', [])
+    ],
+    cmdclass=dict(build_ext=BinaryBuild)
 )
