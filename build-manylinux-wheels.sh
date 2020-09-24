@@ -9,8 +9,8 @@ set -e -x
 # Install yum packages
 yum -y update
 yum -y install libyaml libyaml-devel
-yum -y git
-yum -y gcc gcc-c++ make cmake
+yum -y install git
+yum -y install gcc gcc-c++ make cmake
 
 # Install Rust
 curl https://sh.rustup.rs -sSf | sh -s -- -y
