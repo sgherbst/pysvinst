@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.7.dev2'
+version = '0.1.7.dev3'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
@@ -15,8 +15,8 @@ Python library for parsing module definitions and instantiations from SystemVeri
 
 class BinaryBuild(build_ext):
     def run(self):
-        self.build_svinst_binary()
         self.build_slang_binary()
+        self.build_svinst_binary()
 
     @property
     def extdir(self):
@@ -80,7 +80,7 @@ class BinaryBuild(build_ext):
         # copy the binary to the install location
         (self.extdir / 'bin').mkdir(parents=True, exist_ok=True)
         shutil.copy(str(build / 'bin' / 'slang'),
-                    str(self.extdir / 'bin' / 'slang-svinst'))
+                    str(self.extdir / 'bin' / 'slang'))
 
 
 with open('README.md', 'r') as fh:
@@ -114,7 +114,7 @@ setup(
     entry_points={
         'console_scripts': [
             'svinst=svinst.svinst:main',
-            'slang-svinst=svinst.slang_svinst:main'
+            'slang=svinst.slang:main'
         ]
     },
     install_requires=[
@@ -123,7 +123,7 @@ setup(
     # configure building of svinst binary
     ext_modules=[
         Extension('svinst', []),
-        Extension('slang-svinst', [])
+        Extension('slang', [])
     ],
     cmdclass=dict(build_ext=BinaryBuild)
 )
