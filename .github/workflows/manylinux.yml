@@ -35,8 +35,8 @@ jobs:
         python setup.py sdist
     - name: Build binary distributions
       env:
-        DOCKER_IMAGE: quay.io/pypa/manylinux2010_x86_64
-        PLAT: manylinux2010_x86_64
+        DOCKER_IMAGE: quay.io/pypa/manylinux2014_x86_64
+        PLAT: manylinux2014_x86_64
         PYVER: cp37-cp37m
       run: |
         docker pull $DOCKER_IMAGE
