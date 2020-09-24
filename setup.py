@@ -26,6 +26,8 @@ class SvInstBuild(build_ext):
         else:
             raise Exception('Rust is needed to build this package.  Please install it from https://www.rust-lang.org/tools/install')
 
+        # 
+
 with open('README.md', 'r') as fh:
     LONG_DESCRIPTION = fh.read()
 
