@@ -1,13 +1,14 @@
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 import os
+import platform
 import subprocess
 import shutil
 
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.7.dev11'
+version = '0.1.7.dev12'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
@@ -59,13 +60,15 @@ class BinaryBuild(build_ext):
         # run cmake
         if shutil.which('cmake') is None:
             raise Exception('cmake is needed to build the slang binary.')
-        subprocess.run([
-            'cmake',
-            '-DSTATIC_BUILD=ON',
-            '-DCMAKE_CXX_COMPILER=g++-9',
-            '-DCMAKE_BUILD_TYPE=Release',
-            '..'
-        ])
+
+        cmake_args = []
+        cmake_args += ['cmake']
+        cmake_args += ['-DSTATIC_BUILD=ON']
+        cmake_args += ['-DCMAKE_BUILD_TYPE=Release']
+        if platform.system() == 'Darwin':
+            cmake_args += ['-DCMAKE_CXX_COMPILER=g++-9']
+        cmake_args += ['..']
+        subprocess.run(cmake_args)
 
         # run make
         if shutil.which('make') is None:

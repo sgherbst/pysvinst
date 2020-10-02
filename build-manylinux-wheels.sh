@@ -22,6 +22,10 @@ source $HOME/.cargo/env
 # Update pip itself
 "/opt/python/${PYVER}/bin/pip" install --upgrade --no-cache-dir pip
 
+# Show tool versions
+g++ -v
+cmake --version
+
 # Compile wheels
 "/opt/python/${PYVER}/bin/pip" wheel /io/ -w wheelhouse/ -v
 
