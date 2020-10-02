@@ -6,16 +6,20 @@
 
 set -e -x
 
-# Install yum packages
+# Update yum
 yum -y update
+
+# List installed packages
+yum list installed
+
+# Install needed packages
 yum -y install libyaml libyaml-devel
-yum -y install git
 
 # Install Rust
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 source $HOME/.cargo/env
 
-# Update pip
+# Update pip itself
 "/opt/python/${PYVER}/bin/pip" install --upgrade --no-cache-dir pip
 
 # Compile wheels

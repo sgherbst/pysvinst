@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.7.dev9'
+version = '0.1.7.dev11'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
@@ -58,7 +58,7 @@ class BinaryBuild(build_ext):
 
         # run cmake
         if shutil.which('cmake') is None:
-            raise Exception('git is needed to build the slang binary.')
+            raise Exception('cmake is needed to build the slang binary.')
         subprocess.run([
             'cmake',
             '-DSTATIC_BUILD=ON',
