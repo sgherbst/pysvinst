@@ -1,4 +1,4 @@
-name: Manylinux
+name: Manylinux Release
 
 on:
   push:

@@ -31,7 +31,7 @@ jobs:
       env:
         CXX: g++-9
       run: |
-        pip install -e .
+        pip install -e . -v -v
     - name: Test with pytest
       run: |
         pip install pytest
