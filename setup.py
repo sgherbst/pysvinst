@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.7.dev12'
+version = '0.1.7.dev13'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
@@ -63,7 +63,8 @@ class BinaryBuild(build_ext):
 
         cmake_args = []
         cmake_args += ['cmake']
-        cmake_args += ['-DSTATIC_BUILD=ON']
+        if platform.system() != 'Darwin':
+            cmake_args += ['-DSTATIC_BUILD=ON']
         cmake_args += ['-DCMAKE_BUILD_TYPE=Release']
         if platform.system() == 'Darwin':
             cmake_args += ['-DCMAKE_CXX_COMPILER=g++-9']
