@@ -104,14 +104,15 @@ def process_defs(result):
     return retval
 
 def get_defs(files, includes=None, defines=None, ignore_include=False, separate=False,
-             tool=None):
+             ignore_errors=False, suppress_output=False, tool=None):
 
     single = is_single_file(files)
 
     tool = resolve_tool(tool)
     if tool == 'slang':
         out = call_slang(files=files, includes=includes, defines=defines,
-                        ignore_include=ignore_include, separate=separate, full_tree=False)
+                         ignore_include=ignore_include, separate=separate, full_tree=False,
+                         ignore_errors=ignore_errors, suppress_output=suppress_output)
     elif tool == 'sv-parser':
         out = call_sv_parser(files=files, includes=includes, defines=defines,
                              ignore_include=ignore_include, separate=separate, full_tree=False)
@@ -196,14 +197,17 @@ def process_svinst_syntax_tree(result):
     return retval
 
 def get_syntax_tree(files, includes=None, defines=None, ignore_include=False,
-                    separate=False, tool=None):
+                    separate=False, ignore_errors=False, suppress_output=False,
+                    tool=None):
     single = is_single_file(files)
 
     tool = resolve_tool(tool)
 
     if tool == 'slang':
         out = call_slang(files=files, includes=includes, defines=defines,
-                        ignore_include=ignore_include, separate=separate, full_tree=True)
+                         ignore_include=ignore_include, ignore_errors=ignore_errors,
+                         separate=separate, suppress_output=suppress_output,
+                         full_tree=True)
         return out
     elif tool == 'sv-parser':
         out = call_sv_parser(files=files, includes=includes, defines=defines,

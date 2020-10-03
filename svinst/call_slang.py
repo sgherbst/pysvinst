@@ -5,7 +5,8 @@ from pathlib import Path
 from .util import is_single_file
 
 def call_slang(files, includes=None, defines=None, ignore_include=False,
-               full_tree=False, separate=False):
+               full_tree=False, separate=False, ignore_errors=False,
+               suppress_output=False):
     # set defaults
     if includes is None:
         includes = []
@@ -45,14 +46,17 @@ def call_slang(files, includes=None, defines=None, ignore_include=False,
     if full_tree:
         return parse_full_tree(returncode=returncode, stdout=stdout, stderr=stderr)
     else:
-        return parse_modules(returncode=returncode, stdout=stdout, stderr=stderr)
+        return parse_modules(returncode=returncode, stdout=stdout, stderr=stderr,
+                             ignore_errors=ignore_errors,
+                             suppress_output=suppress_output)
 
 
-def parse_modules(returncode, stdout, stderr):
+def parse_modules(returncode, stdout, stderr, ignore_errors, suppress_output):
     error_indicator = 'error:'
     unknown_module = 'error: unknown module'
     unknown_package = 'error: unknown package'
     unknown_interface = 'error: unknown interface'
+    unknown_class_or_package = 'error: unknown class or package'
 
     files = {}
 
@@ -72,19 +76,26 @@ def parse_modules(returncode, stdout, stderr):
                 ridx = lidx + len(unknown_package)
                 instance_type = 'package'
                 print_error = False
+            elif unknown_class_or_package in line:
+                lidx = line.index(unknown_class_or_package)
+                ridx = lidx + len(unknown_class_or_package)
+                instance_type = 'package'
+                print_error = False
             elif unknown_interface in line:
                 lidx = line.index(unknown_interface)
                 ridx = lidx + len(unknown_interface)
                 instance_type = 'interface'
                 print_error = False
             else:
-                print(line)
+                if not suppress_output:
+                    print(line)
                 print_error = True
                 found_error = True
                 continue
         else:
             if print_error:
-                print(line)
+                if not suppress_output:
+                    print(line)
             continue
 
         # parse out file name, line character
@@ -108,7 +119,11 @@ def parse_modules(returncode, stdout, stderr):
 
     # raise an exception at this point if there was an error
     if found_error:
-        raise Exception('slang detected syntax error(s)')
+        if not ignore_errors:
+            raise Exception('slang detected syntax error(s)')
+        else:
+            if not suppress_output:
+                print('WARNING: slang detected syntax error(s)')
 
     # build structure as needed for output
     retval = {'files': []}
