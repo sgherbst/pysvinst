@@ -1,51 +1,14 @@
-from pathlib import Path
+import os
 from pprint import pformat
-import subprocess
-import yaml
-import sys
 
-def is_single_file(files):
-    return isinstance(files, (str, Path))
+from .call_slang import call_slang
+from .call_sv_parser import call_sv_parser
+from .util import is_single_file
 
-def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False, separate=False):
-    # set defaults
-    if includes is None:
-        includes = []
-    if defines is None:
-        defines = {}
-
-    # wrap files if needed
-    if is_single_file(files):
-        files = [files]
-
-    # prepare arguments
-    args = [Path(__file__).resolve().parent / 'bin' / 'svinst']
-    args += files
-    for k, v in defines.items():
-        if v is not None:
-            args += ['-d', f'{k}={v}']
-        else:
-            args += ['-d', f'{k}']
-    for elem in includes:
-        args += ['-i', f'{elem}']
-    if ignore_include:
-        args += ['--ignore-include']
-    if full_tree:
-        args += ['--full-tree']
-    if separate:
-        args += ['--separate']
-
-    # convert arguments to strings
-    args = [str(elem) for elem in args]
-
-    # call command
-    result = subprocess.run(args, capture_output=True, encoding='utf-8')
-    if result.returncode != 0:
-        print(f'{result.stderr}', file=sys.stderr)
-        raise Exception(f'svinst returned code {result.returncode}.')
-
-    # parse output as YAML
-    return yaml.safe_load(result.stdout)
+def resolve_tool(tool=None):
+    if tool is None:
+        tool = os.environ.get('PSVINST_DEFAULT_TOOL', 'sv-parser')
+    return tool
 
 class Def:
     def __init__(self, name, insts=None):
@@ -92,15 +55,21 @@ class Inst:
                 (self.name == other.name))
 
 class ModInst(Inst):
-    def __init__(self, name, inst_name):
+    def __init__(self, name, inst_name=None):
         super().__init__(name=name)
         self.inst_name = inst_name
 
     def __str__(self):
-        return f'{self.__class__.__name__}("{self.name}", "{self.inst_name}")'
+        if self.inst_name is not None:
+            return f'{self.__class__.__name__}("{self.name}", "{self.inst_name}")'
+        else:
+            return f'{self.__class__.__name__}("{self.name}")'
 
     def __eq__(self, other):
-        return super().__eq__(other) and (self.inst_name == other.inst_name)
+        if self.inst_name is not None:
+            return super().__eq__(other) and (self.inst_name == other.inst_name)
+        else:
+            return super().__eq__(other)
 
 class PkgInst(Inst):
     pass
@@ -134,18 +103,30 @@ def process_defs(result):
 
     return retval
 
-def get_defs(files, includes=None, defines=None, ignore_include=False, separate=False):
+def get_defs(files, includes=None, defines=None, ignore_include=False, separate=False,
+             tool=None):
+
     single = is_single_file(files)
 
-    out = call_svinst(files=files, includes=includes, defines=defines,
-                      ignore_include=ignore_include, separate=separate, full_tree=False)
+    tool = resolve_tool(tool)
+    if tool == 'slang':
+        out = call_slang(files=files, includes=includes, defines=defines,
+                        ignore_include=ignore_include, separate=separate, full_tree=False)
+    elif tool == 'sv-parser':
+        out = call_sv_parser(files=files, includes=includes, defines=defines,
+                             ignore_include=ignore_include, separate=separate, full_tree=False)
+    else:
+        raise Exception(f'Unknown tool: {tool}')
 
     retval = [process_defs(elem['defs']) for elem in out['files']]
 
     if single:
-        retval = retval[0]
-
-    return retval
+        if len(retval) > 0:
+            return retval[0]
+        else:
+            return []
+    else:
+        return retval
 
 class SyntaxToken:
     def __init__(self, token, line):
@@ -194,7 +175,7 @@ class SyntaxNode:
 def is_token(d):
     return d.keys() == {'Token', 'Line'}
 
-def process_syntax_tree(result):
+def process_svinst_syntax_tree(result):
     retval = []
     for elem in result:
         if is_token(elem):
@@ -209,20 +190,33 @@ def process_syntax_tree(result):
             retval.append(
                 SyntaxNode(
                     items[0][0],
-                    process_syntax_tree(items[0][1])
+                    process_svinst_syntax_tree(items[0][1])
                 )
             )
     return retval
 
-def get_syntax_tree(files, includes=None, defines=None, ignore_include=False, separate=False):
+def get_syntax_tree(files, includes=None, defines=None, ignore_include=False,
+                    separate=False, tool=None):
     single = is_single_file(files)
 
-    out = call_svinst(files=files, includes=includes, defines=defines,
-                      ignore_include=ignore_include, separate=separate, full_tree=True)
+    tool = resolve_tool(tool)
 
-    retval = [process_syntax_tree(elem['syntax_tree']) for elem in out['files']]
+    if tool == 'slang':
+        out = call_slang(files=files, includes=includes, defines=defines,
+                        ignore_include=ignore_include, separate=separate, full_tree=True)
+        return out
+    elif tool == 'sv-parser':
+        out = call_sv_parser(files=files, includes=includes, defines=defines,
+                             ignore_include=ignore_include, separate=separate, full_tree=True)
 
-    if single:
-        retval = retval[0]
-
-    return retval
+        retval = [process_svinst_syntax_tree(elem['syntax_tree'])
+                  for elem in out['files']]
+        if single:
+            if len(retval) > 0:
+                return retval[0]
+            else:
+                return []
+        else:
+            return retval
+    else:
+        raise Exception(f'Unknown tool: {tool}')
