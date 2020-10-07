@@ -6,7 +6,8 @@ from .util import is_single_file
 
 def call_slang(files, includes=None, defines=None, ignore_include=False,
                full_tree=False, separate=False, ignore_errors=False,
-               suppress_output=False):
+               suppress_output=False, quiet=True, error_limit=0,
+               top=None):
     # set defaults
     if includes is None:
         includes = []
@@ -34,6 +35,12 @@ def call_slang(files, includes=None, defines=None, ignore_include=False,
         args += ['--ast-json', '-']
     if not separate:
         args += ['--single-unit']
+    if quiet is not None:
+        args += ['--quiet']
+    if error_limit is not None:
+        args += ['--error-limit', str(error_limit)]
+    if top is not None:
+        args += ['--top', str(top)]
 
     # convert arguments to strings
     args = [str(elem) for elem in args]
