@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.7.dev15'
+version = '0.1.7.dev16'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
@@ -45,7 +45,7 @@ class BinaryBuild(build_ext):
             raise Exception('git is needed to check out the slang source code.')
         subprocess.run([
             'git', 'clone',
-            '-b', 'v0.4',
+            '-b', 'master',
             '--single-branch',
             '--depth', '1',
             'https://github.com/MikePopoloski/slang.git'
