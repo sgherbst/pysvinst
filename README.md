@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Actions Status](https://github.com/sgherbst/pysvinst/workflows/Regression/badge.svg)](https://github.com/sgherbst/pysvinst/actions)
 [![codecov](https://codecov.io/gh/sgherbst/pysvinst/branch/master/graph/badge.svg)](https://codecov.io/gh/sgherbst/pysvinst)
-[![PyPI version](https://badge.fury.io/py/svinst.svg)](https://badge.fury.io/py/svinst)
+[![PyPI version](https://badge.fury.io/py/svinst.svg)](https://badge.fury.io/py/svinst) [![Join the chat at https://gitter.im/sgherbst/pysvinst](https://badges.gitter.im/sgherbst/pysvinst.svg)](https://gitter.im/sgherbst/pysvinst?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This Python library examines SystemVerilog files to determine what modules are defined and what modules are instantiated.  The backend uses [sv-parser](https://github.com/dalance/sv-parser), which has good support of SystemVerilog 2017.
 
