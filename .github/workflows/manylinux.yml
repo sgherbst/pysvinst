@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8]
         rust-version: [stable]
 
     runs-on: ${{ matrix.os }}
@@ -39,12 +39,10 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python-version }}
         PLAT: manylinux1_x86_64
       run: |
-        if [[ "${PYTHON_VERSION}" == "3.6" ]]; then
-            PYVER=cp36-cp36m
-        elif [[ "${PYTHON_VERSION}" == "3.7" ]]; then
+        if [[ "${PYTHON_VERSION}" == "3.7" ]]; then
             PYVER=cp37-cp37m
         elif [[ "${PYTHON_VERSION}" == "3.8" ]]; then
-            PYVER=cp38-cp38m
+            PYVER=cp38-cp38
         else
             printf '%s\n' "Unknown Python version." >&2
             exit 1
