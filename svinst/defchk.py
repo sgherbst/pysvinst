@@ -7,7 +7,8 @@ import sys
 def is_single_file(files):
     return isinstance(files, (str, Path))
 
-def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False, separate=False):
+def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False,
+                separate=False, show_macro_defs=False):
     # set defaults
     if includes is None:
         includes = []
@@ -34,6 +35,8 @@ def call_svinst(files, includes=None, defines=None, ignore_include=False, full_t
         args += ['--full-tree']
     if separate:
         args += ['--separate']
+    if show_macro_defs:
+        args += ['--show-macro-defs']
 
     # convert arguments to strings
     args = [str(elem) for elem in args]
@@ -70,6 +73,17 @@ class Def:
                 (self.name == other.name) and
                 (len(self.insts) == len(other.insts)) and
                 all(self_inst == other_inst for self_inst, other_inst in zip(self.insts, other.insts)))
+
+class MacroDef:
+    def __init__(self, text):
+        self.text = text
+
+    def __str__(self):
+        return f"{self.__class__.__name__}('{self.text}')"
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+                (self.text == other.text))
 
 class ModDef(Def):
     pass
@@ -134,13 +148,33 @@ def process_defs(result):
 
     return retval
 
-def get_defs(files, includes=None, defines=None, ignore_include=False, separate=False):
+def process_macro_defs(result):
+    retval = []
+
+    if result is None:
+        result = []
+
+    for entry in result:
+        retval.append(MacroDef(text=entry))
+
+    return retval
+
+def get_defs(files, includes=None, defines=None, ignore_include=False,
+             separate=False, show_macro_defs=False):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
-                      ignore_include=ignore_include, separate=separate, full_tree=False)
+                      ignore_include=ignore_include, separate=separate,
+                      show_macro_defs=show_macro_defs, full_tree=False)
 
-    retval = [process_defs(elem['defs']) for elem in out['files']]
+    retval = []
+    for elem in out['files']:
+        retval.append([])
+        retval[-1].extend(process_defs(elem['defs']))
+        if show_macro_defs:
+            macro_defs = process_macro_defs(elem['macro_defs'])
+            macro_defs = sorted(macro_defs, key=lambda x: x.text)
+            retval[-1].extend(macro_defs)
 
     if single:
         retval = retval[0]
@@ -214,11 +248,13 @@ def process_syntax_tree(result):
             )
     return retval
 
-def get_syntax_tree(files, includes=None, defines=None, ignore_include=False, separate=False):
+def get_syntax_tree(files, includes=None, defines=None, ignore_include=False,
+                    separate=False, show_macro_defs=False):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
-                      ignore_include=ignore_include, separate=separate, full_tree=True)
+                      ignore_include=ignore_include, separate=separate,
+                      show_macro_defs=show_macro_defs, full_tree=True)
 
     retval = [process_syntax_tree(elem['syntax_tree']) for elem in out['files']]
 

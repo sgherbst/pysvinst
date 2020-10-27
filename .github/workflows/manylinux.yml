@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7]
+        python-version: [3.6, 3.7, 3.8]
         rust-version: [stable]
 
     runs-on: ${{ matrix.os }}
@@ -36,9 +36,19 @@ jobs:
     - name: Build binary distributions
       env:
         DOCKER_IMAGE: quay.io/pypa/manylinux1_x86_64
+        PYTHON_VERSION: ${{ matrix.python-version }}
         PLAT: manylinux1_x86_64
-        PYVER: cp37-cp37m
       run: |
+        if [[ "${PYTHON_VERSION}" == "3.6" ]]; then
+            PYVER=cp36-cp36m
+        elif [[ "${PYTHON_VERSION}" == "3.7" ]]; then
+            PYVER=cp37-cp37m
+        elif [[ "${PYTHON_VERSION}" == "3.8" ]]; then
+            PYVER=cp38-cp38m
+        else
+            printf '%s\n' "Unknown Python version." >&2
+            exit 1
+        fi
         docker pull $DOCKER_IMAGE
         docker run --rm -e PLAT=$PLAT -e PYVER=$PYVER -v `pwd`:/io $DOCKER_IMAGE /io/build-manylinux-wheels.sh
     - name: Publish wheels to PyPI

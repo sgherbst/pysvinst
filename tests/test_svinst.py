@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from svinst import *
 from svinst.defchk import (ModDef, ModInst, SyntaxNode, SyntaxToken,
-                           PkgDef, PkgInst, IntfDef)
+                           PkgDef, PkgInst, IntfDef, MacroDef)
 
 VLOG_DIR = Path(__file__).resolve().parent / 'verilog'
 
@@ -39,12 +39,14 @@ def test_inc():
 
 def test_def():
     defines = {'MODULE_NAME': 'module_name_from_define', 'EXTRA_INSTANCE': None}
-    result = get_defs(VLOG_DIR / 'def_test.sv', defines=defines)
+    result = get_defs(VLOG_DIR / 'def_test.sv', defines=defines, show_macro_defs=True)
     expct = [
       ModDef("def_top", [
         ModInst("module_name_from_define", "I0"),
         ModInst("module_from_ifdef", "I1")
-      ])
+      ]),
+      MacroDef('Define { identifier: "EXTRA_INSTANCE", arguments: [], text: None }'),
+      MacroDef('Define { identifier: "MODULE_NAME", arguments: [], text: Some(DefineText { text: "module_name_from_define", origin: None }) }')
     ]
     assert result == expct
 
