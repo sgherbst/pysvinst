@@ -4,11 +4,51 @@ import subprocess
 import yaml
 import sys
 
+try:
+    from colorama import Fore, Style
+    def error_text(s):
+        return f'{Fore.RED}{Style.BRIGHT}{s}{Style.RESET_ALL}'
+except:
+    def error_text(s):
+        return f'{s}'
+
 def is_single_file(files):
     return isinstance(files, (str, Path))
 
+def print_error_explanation(files, stdout):
+    # try to parse the YAML output
+    d = yaml.safe_load(stdout)
+
+    # figure out which files had errors (i.e., which are missing)
+    error_set = set()
+    idx = 0
+    for k in range(len(files)):
+        if (idx < len(d['files']) and
+            (str(d['files'][idx]['file_name']) == str(files[k]))):
+            idx += 1
+        else:
+            error_set.add(k)
+
+    # mark the files with errors
+    files_str = []
+    for k, file in enumerate(files):
+        name = Path(file).name
+        if k in error_set:
+            name = error_text(name)
+        files_str.append(name)
+    bold_list = '[' + ', '.join(files_str) + ']'
+
+    # make a list of the file indices with errors, starting
+    # at "1" to make it more human-readable
+    indices = list(error_set)
+    indices = sorted(indices)
+    indices = ', '.join(str(x+1) for x in indices)
+
+    # print out the file(s) with issues
+    print(f'Error in file(s) {indices}: {bold_list}', file=sys.stderr)
+
 def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False,
-                separate=False, show_macro_defs=False):
+                separate=False, show_macro_defs=False, explain_error=True):
     # set defaults
     if includes is None:
         includes = []
@@ -45,6 +85,11 @@ def call_svinst(files, includes=None, defines=None, ignore_include=False, full_t
     result = subprocess.run(args, capture_output=True, encoding='utf-8')
     if result.returncode != 0:
         print(f'{result.stderr}', file=sys.stderr)
+        if explain_error and (len(files) > 1):
+            try:
+                print_error_explanation(files=files, stdout=result.stdout)
+            except:
+                pass
         raise Exception(f'svinst returned code {result.returncode}.')
 
     # parse output as YAML

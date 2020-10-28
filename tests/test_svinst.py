@@ -24,9 +24,18 @@ def test_test():
     ]
     assert result == expct
 
-def test_broken():
+def test_broken(capsys):
+    # determine the path to the broken file
+    broken_file = VLOG_DIR / 'broken.sv'
+
+    # expect parsing of these files to fail
     with pytest.raises(Exception):
-        get_defs(VLOG_DIR / 'broken.sv')
+        get_defs(broken_file)
+
+    # make sure the error message includes the right information
+    _, err = capsys.readouterr()
+    lines = err.splitlines()
+    assert lines[0].strip() == f'parse failed: "{broken_file}"'
 
 def test_inc():
     result = get_defs(VLOG_DIR / 'inc_test.sv', includes=[VLOG_DIR])
@@ -136,3 +145,40 @@ def test_multi():
         [ModDef("dut")]
     ]
     assert result == expct
+
+def test_mux():
+    result = get_defs([
+        VLOG_DIR / 'mux' / 'mux1_define.svh',
+        VLOG_DIR / 'mux' / 'mux.sv',
+        VLOG_DIR / 'mux' / 'mux1_undef.svh',
+        VLOG_DIR / 'mux' / 'mux2_define.svh',
+        VLOG_DIR / 'mux' / 'mux.sv',
+        VLOG_DIR / 'mux' / 'mux2_undef.svh'
+    ])
+    expct = [
+        [],
+        [ModDef('mux1')],
+        [],
+        [],
+        [ModDef('mux2')],
+        []
+    ]
+    assert result == expct
+
+def test_error_explain(capsys):
+    # expect parsing of these files to fail
+    with pytest.raises(Exception):
+        get_defs([
+            VLOG_DIR / 'mux' / 'mux.sv',
+            VLOG_DIR / 'mux' / 'mux1_undef.svh',
+            VLOG_DIR / 'mux' / 'mux2_define.svh',
+            VLOG_DIR / 'broken.sv',
+            VLOG_DIR / 'mux' / 'mux.sv',
+            VLOG_DIR / 'mux' / 'mux2_undef.svh',
+            VLOG_DIR / 'mux' / 'mux.sv'
+        ])
+
+    # make sure the error message includes the right information
+    _, err = capsys.readouterr()
+    lines = err.splitlines()
+    assert lines[-1].startswith('Error in file(s) 1, 4, 7:')
