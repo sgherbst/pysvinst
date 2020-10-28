@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 name = 'svinst'
-version = '0.1.7.dev31'
+version = '0.1.7.dev32'
 
 DESCRIPTION = '''\
 Python library for parsing module definitions and instantiations from SystemVerilog files\
@@ -60,8 +60,7 @@ setup(
         ]
     },
     install_requires=[
-        'PyYAML',
-        'colorama'
+        'PyYAML'
     ],
     # configure building of svinst binary
     ext_modules=[Extension('svinst', [])],

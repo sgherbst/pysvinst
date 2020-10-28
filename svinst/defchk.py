@@ -4,13 +4,8 @@ import subprocess
 import yaml
 import sys
 
-try:
-    from colorama import Fore, Style
-    def error_text(s):
-        return f'{Fore.RED}{Style.BRIGHT}{s}{Style.RESET_ALL}'
-except:
-    def error_text(s):
-        return f'**{s}**'
+def error_text(s):
+    return f'**{s}**'
 
 def is_single_file(files):
     return isinstance(files, (str, Path))
