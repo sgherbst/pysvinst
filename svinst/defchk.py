@@ -200,12 +200,13 @@ def process_macro_defs(result):
     return retval
 
 def get_defs(files, includes=None, defines=None, ignore_include=False,
-             separate=False, show_macro_defs=False):
+             separate=False, show_macro_defs=False, explain_error=True):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
                       ignore_include=ignore_include, separate=separate,
-                      show_macro_defs=show_macro_defs, full_tree=False)
+                      show_macro_defs=show_macro_defs, explain_error=explain_error,
+                      full_tree=False)
 
     retval = []
     for elem in out['files']:
@@ -289,12 +290,13 @@ def process_syntax_tree(result):
     return retval
 
 def get_syntax_tree(files, includes=None, defines=None, ignore_include=False,
-                    separate=False, show_macro_defs=False):
+                    separate=False, show_macro_defs=False, explain_error=True):
     single = is_single_file(files)
 
     out = call_svinst(files=files, includes=includes, defines=defines,
                       ignore_include=ignore_include, separate=separate,
-                      show_macro_defs=show_macro_defs, full_tree=True)
+                      show_macro_defs=show_macro_defs, explain_error=explain_error,
+                      full_tree=True)
 
     retval = [process_syntax_tree(elem['syntax_tree']) for elem in out['files']]
 
