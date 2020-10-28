@@ -11,7 +11,7 @@ yum -y update
 yum -y install libyaml libyaml-devel
 
 # Install Rust
-curl https://sh.rustup.rs -sSf | sh -s -- -y
+curl https://sh.rustup.rs -sSf | sh -s -- -y --default-host=i686-unknown-linux-gnu
 source $HOME/.cargo/env
 
 # Update pip
