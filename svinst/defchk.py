@@ -10,7 +10,7 @@ try:
         return f'{Fore.RED}{Style.BRIGHT}{s}{Style.RESET_ALL}'
 except:
     def error_text(s):
-        return f'{s}'
+        return f'**{s}**'
 
 def is_single_file(files):
     return isinstance(files, (str, Path))
