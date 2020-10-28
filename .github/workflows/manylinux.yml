@@ -34,7 +34,7 @@ jobs:
       run: |
         python setup.py sdist
     - name: Build Python 3.7 distribution
-      if: ${{ matrix.python-version == "3.7" }}
+      if: matrix.python-version == '3.7'
       env:
         DOCKER_IMAGE: quay.io/pypa/manylinux1_x86_64
         PLAT: manylinux1_x86_64
@@ -43,7 +43,7 @@ jobs:
         docker pull $DOCKER_IMAGE
         docker run --rm -e PLAT=$PLAT -e PYVER=$PYVER -v `pwd`:/io $DOCKER_IMAGE /io/build-manylinux-wheels.sh
     - name: Build Python 3.8 distribution
-      if: ${{ matrix.python-version == "3.8" }}
+      if: matrix.python-version == '3.8'
       env:
         DOCKER_IMAGE: quay.io/pypa/manylinux1_x86_64
         PLAT: manylinux1_x86_64
