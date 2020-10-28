@@ -43,10 +43,16 @@ jobs:
       run: |
         docker pull quay.io/pypa/manylinux1_x86_64
         docker run --rm -e PLAT=manylinux1_x86_64 -e PYVER=cp38-cp38 -v `pwd`:/io quay.io/pypa/manylinux1_x86_64 /io/build-manylinux-wheels.sh
-    - name: Publish wheels to PyPI
+    - name: Publish source to PyPI
+      if: matrix.python-version == '3.7'
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        twine upload dist/*
+    - name: Publish binaries to PyPI
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         twine upload wheelhouse/svinst*-manylinux*.whl
-        twine upload dist/*
