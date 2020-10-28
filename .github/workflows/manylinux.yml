@@ -35,22 +35,14 @@ jobs:
         python setup.py sdist
     - name: Build Python 3.7 distribution
       if: matrix.python-version == '3.7'
-      env:
-        DOCKER_IMAGE: quay.io/pypa/manylinux1_x86_64
-        PLAT: manylinux1_x86_64
-        PYVER: cp37-cp37m
       run: |
-        docker pull $DOCKER_IMAGE
-        docker run --rm -e PLAT=$PLAT -e PYVER=$PYVER -v `pwd`:/io $DOCKER_IMAGE /io/build-manylinux-wheels.sh
+        docker pull quay.io/pypa/manylinux1_x86_64
+        docker run --rm -e PLAT=manylinux1_x86_64 -e PYVER=cp37-cp37m -v `pwd`:/io quay.io/pypa/manylinux1_x86_64 /io/build-manylinux-wheels.sh
     - name: Build Python 3.8 distribution
       if: matrix.python-version == '3.8'
-      env:
-        DOCKER_IMAGE: quay.io/pypa/manylinux1_x86_64
-        PLAT: manylinux1_x86_64
-        PYVER: cp38-cp38
       run: |
-        docker pull $DOCKER_IMAGE
-        docker run --rm -e PLAT=$PLAT -e PYVER=$PYVER -v `pwd`:/io $DOCKER_IMAGE /io/build-manylinux-wheels.sh
+        docker pull quay.io/pypa/manylinux1_x86_64
+        docker run --rm -e PLAT=manylinux1_x86_64 -e PYVER=cp38-cp38 -v `pwd`:/io quay.io/pypa/manylinux1_x86_64 /io/build-manylinux-wheels.sh
     - name: Publish wheels to PyPI
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
