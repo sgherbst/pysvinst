@@ -15,7 +15,6 @@ class SVInstParsingError(Exception):
         file_list: List of files that were passed to svinst
         svinst_stderr: Output of the svinst tool to standard error (stderr)
         svinst_retcode: Return code of svinst
-        nl: Newline character to use when formatting the exception message
     """
 
     def __init__(self, error_set=None, file_list=None, svinst_stderr=None,
