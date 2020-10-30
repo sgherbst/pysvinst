@@ -2,7 +2,8 @@ import pytest
 from pathlib import Path
 from svinst import *
 from svinst.defchk import (ModDef, ModInst, SyntaxNode, SyntaxToken,
-                           PkgDef, PkgInst, IntfDef, MacroDef)
+                           PkgDef, PkgInst, IntfDef, MacroDef,
+                           SVInstParsingError)
 
 VLOG_DIR = Path(__file__).resolve().parent / 'verilog'
 
@@ -24,18 +25,19 @@ def test_test():
     ]
     assert result == expct
 
-def test_broken(capsys):
+def test_broken():
     # determine the path to the broken file
     broken_file = VLOG_DIR / 'broken.sv'
 
     # expect parsing of these files to fail
-    with pytest.raises(Exception):
+    try:
         get_defs(broken_file)
-
-    # make sure the error message includes the right information
-    _, err = capsys.readouterr()
-    lines = err.splitlines()
-    assert lines[0].strip() == f'parse failed: "{broken_file}"'
+        raise Exception('Should not get to this point.')
+    except SVInstParsingError as e:
+        err = str(e)
+        lines = err.splitlines()
+        assert lines[0].startswith(f'parse failed: "{broken_file}"')
+        assert lines[-1].startswith('svinst returned code 1.')
 
 def test_inc():
     result = get_defs(VLOG_DIR / 'inc_test.sv', includes=[VLOG_DIR])
@@ -165,9 +167,9 @@ def test_mux():
     ]
     assert result == expct
 
-def test_error_explain(capsys):
+def test_error_explain():
     # expect parsing of these files to fail
-    with pytest.raises(Exception):
+    try:
         get_defs([
             VLOG_DIR / 'mux' / 'mux.sv',
             VLOG_DIR / 'mux' / 'mux1_undef.svh',
@@ -177,8 +179,9 @@ def test_error_explain(capsys):
             VLOG_DIR / 'mux' / 'mux2_undef.svh',
             VLOG_DIR / 'mux' / 'mux.sv'
         ])
-
-    # make sure the error message includes the right information
-    _, err = capsys.readouterr()
-    lines = err.splitlines()
-    assert lines[-1].startswith('Error in file(s) 1, 4, 7:')
+        raise Exception('Should not get to this point.')
+    except SVInstParsingError as e:
+        err = str(e)
+        lines = err.splitlines()
+        assert lines[-2].startswith('Error in file(s) 1, 4, 7:')
+        assert lines[-1].startswith('svinst returned code 1.')

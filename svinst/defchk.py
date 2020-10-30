@@ -7,10 +7,55 @@ import sys
 def error_text(s):
     return f'**{s}**'
 
+class SVInstParsingError(Exception):
+    """Exception raised for errors while parsing.
+
+    Attributes:
+        error_list: list of tuples (index, file_name)
+        message: original raw error message
+    """
+
+    def __init__(self, error_set=None, file_list=None, svinst_stderr=None,
+                 svinst_retcode=None, nl='\n'):
+        # save information
+        self.error_set = error_set
+        self.file_list = file_list
+        self.svinst_stderr = svinst_stderr
+        self.svinst_retcode = svinst_retcode
+
+        # render message
+        message = []
+        if svinst_stderr is not None:
+            message += [f'{svinst_stderr}']
+        if (error_set is not None) and (file_list is not None):
+            # render a list of indices
+            # make a list of the file indices with errors, starting
+            # at "1" to make it more human-readable
+            indices = list(error_set)
+            indices = sorted(indices)
+            indices = [str(x+1) for x in indices]
+            indices = ', '.join(indices)
+
+            # mark the files with errors
+            files_str = []
+            for k, file in enumerate(file_list):
+                name = Path(file).name
+                if k in error_set:
+                    name = error_text(name)
+                files_str.append(name)
+            marked_list = '[' + ', '.join(files_str) + ']'
+
+            # create the error message
+            message += [f'Error in file(s) {indices}: {marked_list}']
+        if svinst_retcode is not None:
+            message += [f'svinst returned code {svinst_retcode}.']
+
+        super().__init__(nl.join(message))
+
 def is_single_file(files):
     return isinstance(files, (str, Path))
 
-def print_error_explanation(files, stdout):
+def find_error_indices(files, stdout):
     # try to parse the YAML output
     d = yaml.safe_load(stdout)
 
@@ -24,23 +69,8 @@ def print_error_explanation(files, stdout):
         else:
             error_set.add(k)
 
-    # mark the files with errors
-    files_str = []
-    for k, file in enumerate(files):
-        name = Path(file).name
-        if k in error_set:
-            name = error_text(name)
-        files_str.append(name)
-    bold_list = '[' + ', '.join(files_str) + ']'
-
-    # make a list of the file indices with errors, starting
-    # at "1" to make it more human-readable
-    indices = list(error_set)
-    indices = sorted(indices)
-    indices = ', '.join(str(x+1) for x in indices)
-
-    # print out the file(s) with issues
-    print(f'Error in file(s) {indices}: {bold_list}', file=sys.stderr)
+    # return the indices
+    return error_set
 
 def call_svinst(files, includes=None, defines=None, ignore_include=False, full_tree=False,
                 separate=False, show_macro_defs=False, explain_error=True):
@@ -79,13 +109,17 @@ def call_svinst(files, includes=None, defines=None, ignore_include=False, full_t
     # call command
     result = subprocess.run(args, capture_output=True, encoding='utf-8')
     if result.returncode != 0:
-        print(f'{result.stderr}', file=sys.stderr)
+        # find indices of files with errors, if desired
+        error_set = None
         if explain_error and (len(files) > 1):
             try:
-                print_error_explanation(files=files, stdout=result.stdout)
+                error_set = find_error_indices(files=files, stdout=result.stdout)
             except:
                 pass
-        raise Exception(f'svinst returned code {result.returncode}.')
+
+        # raise an exception
+        raise SVInstParsingError(error_set=error_set,file_list=files,
+                                 svinst_stderr=result.stderr, svinst_retcode=result.returncode)
 
     # parse output as YAML
     return yaml.safe_load(result.stdout)
