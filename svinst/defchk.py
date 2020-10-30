@@ -11,8 +11,11 @@ class SVInstParsingError(Exception):
     """Exception raised for errors while parsing.
 
     Attributes:
-        error_list: list of tuples (index, file_name)
-        message: original raw error message
+        error_set: Set of file indices that have parsing errors (starts at zero)
+        file_list: List of files that were passed to svinst
+        svinst_stderr: Output of the svinst tool to standard error (stderr)
+        svinst_retcode: Return code of svinst
+        nl: Newline character to use when formatting the exception message
     """
 
     def __init__(self, error_set=None, file_list=None, svinst_stderr=None,
