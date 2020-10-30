@@ -35,6 +35,6 @@ jobs:
         pip install pytest pytest-cov
         pytest --cov-report=xml --cov=svinst tests -v -r s
     - name: Upload coverage
-      uses: codecov/codecov-action@v1.0.3
+      uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
