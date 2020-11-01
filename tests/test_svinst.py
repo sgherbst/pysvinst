@@ -2,7 +2,8 @@ import pytest
 from pathlib import Path
 from svinst import *
 from svinst.defchk import (ModDef, ModInst, SyntaxNode, SyntaxToken,
-                           PkgDef, PkgInst, IntfDef)
+                           PkgDef, PkgInst, IntfDef, MacroDef,
+                           SVInstParsingError)
 
 VLOG_DIR = Path(__file__).resolve().parent / 'verilog'
 
@@ -25,8 +26,18 @@ def test_test():
     assert result == expct
 
 def test_broken():
-    with pytest.raises(Exception):
-        get_defs(VLOG_DIR / 'broken.sv')
+    # determine the path to the broken file
+    broken_file = VLOG_DIR / 'broken.sv'
+
+    # expect parsing of these files to fail
+    try:
+        get_defs(broken_file)
+        raise Exception('Should not get to this point.')
+    except SVInstParsingError as e:
+        err = str(e)
+        lines = err.splitlines()
+        assert lines[0].startswith(f'parse failed: "{broken_file}"')
+        assert lines[-1].startswith('svinst returned code 1.')
 
 def test_inc():
     result = get_defs(VLOG_DIR / 'inc_test.sv', includes=[VLOG_DIR])
@@ -39,12 +50,14 @@ def test_inc():
 
 def test_def():
     defines = {'MODULE_NAME': 'module_name_from_define', 'EXTRA_INSTANCE': None}
-    result = get_defs(VLOG_DIR / 'def_test.sv', defines=defines)
+    result = get_defs(VLOG_DIR / 'def_test.sv', defines=defines, show_macro_defs=True)
     expct = [
       ModDef("def_top", [
         ModInst("module_name_from_define", "I0"),
         ModInst("module_from_ifdef", "I1")
-      ])
+      ]),
+      MacroDef('Define { identifier: "EXTRA_INSTANCE", arguments: [], text: None }'),
+      MacroDef('Define { identifier: "MODULE_NAME", arguments: [], text: Some(DefineText { text: "module_name_from_define", origin: None }) }')
     ]
     assert result == expct
 
@@ -134,3 +147,41 @@ def test_multi():
         [ModDef("dut")]
     ]
     assert result == expct
+
+def test_mux():
+    result = get_defs([
+        VLOG_DIR / 'mux' / 'mux1_define.svh',
+        VLOG_DIR / 'mux' / 'mux.sv',
+        VLOG_DIR / 'mux' / 'mux1_undef.svh',
+        VLOG_DIR / 'mux' / 'mux2_define.svh',
+        VLOG_DIR / 'mux' / 'mux.sv',
+        VLOG_DIR / 'mux' / 'mux2_undef.svh'
+    ])
+    expct = [
+        [],
+        [ModDef('mux1')],
+        [],
+        [],
+        [ModDef('mux2')],
+        []
+    ]
+    assert result == expct
+
+def test_error_explain():
+    # expect parsing of these files to fail
+    try:
+        get_defs([
+            VLOG_DIR / 'mux' / 'mux.sv',
+            VLOG_DIR / 'mux' / 'mux1_undef.svh',
+            VLOG_DIR / 'mux' / 'mux2_define.svh',
+            VLOG_DIR / 'broken.sv',
+            VLOG_DIR / 'mux' / 'mux.sv',
+            VLOG_DIR / 'mux' / 'mux2_undef.svh',
+            VLOG_DIR / 'mux' / 'mux.sv'
+        ])
+        raise Exception('Should not get to this point.')
+    except SVInstParsingError as e:
+        err = str(e)
+        lines = err.splitlines()
+        assert lines[-2].startswith('Error in file(s) 1, 4, 7:')
+        assert lines[-1].startswith('svinst returned code 1.')

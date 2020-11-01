@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7]
+        python-version: [3.7, 3.8]
         rust-version: [stable]
 
     runs-on: ${{ matrix.os }}
@@ -33,18 +33,26 @@ jobs:
     - name: Build source distribution
       run: |
         python setup.py sdist
-    - name: Build binary distributions
-      env:
-        DOCKER_IMAGE: quay.io/pypa/manylinux1_x86_64
-        PLAT: manylinux1_x86_64
-        PYVER: cp37-cp37m
+    - name: Build Python 3.7 distribution
+      if: matrix.python-version == '3.7'
       run: |
-        docker pull $DOCKER_IMAGE
-        docker run --rm -e PLAT=$PLAT -e PYVER=$PYVER -v `pwd`:/io $DOCKER_IMAGE /io/build-manylinux-wheels.sh
-    - name: Publish wheels to PyPI
+        docker pull quay.io/pypa/manylinux1_x86_64
+        docker run --rm -e PLAT=manylinux1_x86_64 -e PYVER=cp37-cp37m -v `pwd`:/io quay.io/pypa/manylinux1_x86_64 /io/build-manylinux-wheels.sh
+    - name: Build Python 3.8 distribution
+      if: matrix.python-version == '3.8'
+      run: |
+        docker pull quay.io/pypa/manylinux1_x86_64
+        docker run --rm -e PLAT=manylinux1_x86_64 -e PYVER=cp38-cp38 -v `pwd`:/io quay.io/pypa/manylinux1_x86_64 /io/build-manylinux-wheels.sh
+    - name: Publish source to PyPI
+      if: matrix.python-version == '3.7'
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        twine upload dist/*
+    - name: Publish binaries to PyPI
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         twine upload wheelhouse/svinst*-manylinux*.whl
-        twine upload dist/*

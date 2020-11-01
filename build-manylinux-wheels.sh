@@ -13,6 +13,8 @@ yum -y install libyaml libyaml-devel
 # Install Rust
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 source $HOME/.cargo/env
+rustup default 1.46.0
+rustc --version
 
 # Update pip
 "/opt/python/${PYVER}/bin/pip" install --upgrade --no-cache-dir pip
