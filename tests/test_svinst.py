@@ -167,6 +167,13 @@ def test_mux():
     ]
     assert result == expct
 
+def test_macro_inst_name():
+    result = get_defs(VLOG_DIR / 'macro_inst_name.sv')
+    expct = [
+        ModDef("mymod", [ModInst("mysubmod", "u_mysubmod")])
+    ]
+    assert result == expct
+
 def test_error_explain():
     # expect parsing of these files to fail
     try:
