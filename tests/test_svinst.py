@@ -95,6 +95,10 @@ def test_simple():
     ]
     assert result == expct
 
+def test_quotes():
+    # just make sure it doesn't crash
+    get_syntax_tree(VLOG_DIR / 'quotes.sv')
+
 def test_pkg():
     result = get_defs(VLOG_DIR / 'pkg.sv')
     expct = [
