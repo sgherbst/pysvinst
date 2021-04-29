@@ -306,6 +306,10 @@ def is_token(d):
     return d.keys() == {'Token', 'Line'}
 
 def process_syntax_tree(result):
+    # just return an empty list of result is None
+    if result is None:
+        return []
+
     retval = []
     for elem in result:
         if is_token(elem):
@@ -333,7 +337,6 @@ def get_syntax_tree(files, includes=None, defines=None, ignore_include=False,
                       ignore_include=ignore_include, separate=separate,
                       show_macro_defs=show_macro_defs, explain_error=explain_error,
                       full_tree=True)
-
     retval = [process_syntax_tree(elem['syntax_tree']) for elem in out['files']]
 
     if single:
